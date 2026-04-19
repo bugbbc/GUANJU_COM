@@ -2,10 +2,7 @@
   const body = document.body;
   const html = document.documentElement;
   const langSwitch = document.getElementById("lang-switch");
-  const menuToggle = document.getElementById("menu-toggle");
-  const navPanel = document.getElementById("nav-panel");
   const descriptionMeta = document.querySelector('meta[name="description"]');
-  const navGroups = Array.from(document.querySelectorAll(".nav-group"));
   const consultLinks = Array.from(document.querySelectorAll(".js-consult-link"));
   const revealItems = Array.from(document.querySelectorAll(".reveal"));
   const inquiryForms = Array.from(document.querySelectorAll(".js-inquiry-form"));
@@ -169,11 +166,33 @@
     });
   }
 
-  function clearLanguageParamInUrl() {
+  function normalizePageUrl() {
     const url = new URL(window.location.href);
+    let shouldReplace = false;
+
     if (url.searchParams.has("lang")) {
       url.searchParams.delete("lang");
-      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      shouldReplace = true;
+    }
+
+    if (url.hash) {
+      url.hash = "";
+      shouldReplace = true;
+    }
+
+    if (url.pathname.endsWith("/index.html")) {
+      url.pathname = url.pathname.slice(0, -"/index.html".length) || "/";
+      shouldReplace = true;
+    }
+
+    if (!url.pathname) {
+      url.pathname = "/";
+      shouldReplace = true;
+    }
+
+    if (shouldReplace) {
+      const normalized = `${url.pathname}${url.search}`;
+      window.history.replaceState({}, "", normalized || "/");
     }
   }
 
@@ -201,7 +220,7 @@
   }
 
   function getInitialLanguage() {
-    clearLanguageParamInUrl();
+    normalizePageUrl();
     return "en";
   }
 
@@ -209,69 +228,6 @@
     langSwitch.addEventListener("click", () => {
       const nextLang = body.dataset.lang === "zh" ? "en" : "zh";
       setLanguage(nextLang);
-    });
-  }
-
-  if (menuToggle && navPanel) {
-    function closeNavGroups() {
-      navGroups.forEach((group) => {
-        group.classList.remove("open");
-        const toggle = group.querySelector("[data-nav-toggle]");
-        if (toggle) {
-          toggle.setAttribute("aria-expanded", "false");
-        }
-      });
-    }
-
-    menuToggle.addEventListener("click", () => {
-      closeNavGroups();
-      const isOpen = navPanel.classList.toggle("open");
-      menuToggle.setAttribute("aria-expanded", String(isOpen));
-    });
-
-    navGroups.forEach((group) => {
-      const toggle = group.querySelector("[data-nav-toggle]");
-
-      if (!toggle) {
-        return;
-      }
-
-      toggle.addEventListener("click", (event) => {
-        event.preventDefault();
-
-        const willOpen = !group.classList.contains("open");
-        closeNavGroups();
-        group.classList.toggle("open", willOpen);
-        toggle.setAttribute("aria-expanded", String(willOpen));
-      });
-    });
-
-    Array.from(
-      document.querySelectorAll(
-        ".nav-links a, .footer-nav a, .footer-links a, .nav-cta",
-      ),
-    ).forEach((link) => {
-      link.addEventListener("click", () => {
-        closeNavGroups();
-        navPanel.classList.remove("open");
-        menuToggle.setAttribute("aria-expanded", "false");
-      });
-    });
-
-    document.addEventListener("click", (event) => {
-      if (!navPanel.contains(event.target) && event.target !== menuToggle) {
-        closeNavGroups();
-        navPanel.classList.remove("open");
-        menuToggle.setAttribute("aria-expanded", "false");
-      }
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth > 860) {
-        closeNavGroups();
-        navPanel.classList.remove("open");
-        menuToggle.setAttribute("aria-expanded", "false");
-      }
     });
   }
 
