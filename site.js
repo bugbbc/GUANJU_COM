@@ -4,12 +4,12 @@
   const langSwitch = document.getElementById("lang-switch");
   const menuToggle = document.getElementById("menu-toggle");
   const navPanel = document.getElementById("nav-panel");
+  const descriptionMeta = document.querySelector('meta[name="description"]');
   const navGroups = Array.from(document.querySelectorAll(".nav-group"));
   const consultLinks = Array.from(document.querySelectorAll(".js-consult-link"));
   const revealItems = Array.from(document.querySelectorAll(".reveal"));
   const inquiryForms = Array.from(document.querySelectorAll(".js-inquiry-form"));
   const baguaModules = Array.from(document.querySelectorAll(".js-bagua"));
-  const LANGUAGE_STORAGE_KEY = "center-language";
   const CONSULT_URLS = {
     zh: "https://ichingciv.com/zh/index.html",
     en: "https://ichingciv.com/en/index.html",
@@ -17,6 +17,10 @@
   const titleText = {
     zh: body.dataset.titleZh || document.title,
     en: body.dataset.titleEn || document.title,
+  };
+  const descriptionText = {
+    zh: body.dataset.descriptionZh || descriptionMeta?.content || "",
+    en: body.dataset.descriptionEn || descriptionMeta?.content || "",
   };
   const fieldPlaceholders = {
     email: {
@@ -177,6 +181,9 @@
     body.dataset.lang = lang;
     html.lang = lang === "zh" ? "zh-CN" : "en";
     document.title = titleText[lang];
+    if (descriptionMeta && descriptionText[lang]) {
+      descriptionMeta.content = descriptionText[lang];
+    }
     updatePlaceholders(lang);
     updateTopicText(lang);
 
@@ -191,26 +198,10 @@
         lang === "zh" ? "Switch to English" : "切换到中文",
       );
     }
-
-    try {
-      sessionStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-    } catch (error) {
-      // Ignore storage failures.
-    }
   }
 
   function getInitialLanguage() {
     clearLanguageParamInUrl();
-
-    try {
-      const savedLanguage = sessionStorage.getItem(LANGUAGE_STORAGE_KEY);
-      if (savedLanguage === "zh" || savedLanguage === "en") {
-        return savedLanguage;
-      }
-    } catch (error) {
-      // Ignore storage failures.
-    }
-
     return "en";
   }
 
